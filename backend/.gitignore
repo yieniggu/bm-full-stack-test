@@ -17,3 +17,6 @@ yarn-error.log*
 
 # macOS
 .DS_Store
+
+# Docker
+docker-compose.override.yml
