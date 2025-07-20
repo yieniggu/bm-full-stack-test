@@ -4,6 +4,7 @@ import cors from "cors";
 
 import userRoutes from "./routes/userRoutes";
 import clientRoutes from "./routes/clientRoutes";
+import estimateRoutes from "./routes/estimateRoutes";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use("/api/users", userRoutes);
 app.use("/api/clients", clientRoutes);
+app.use("/api/estimates", estimateRoutes);
 
 app.get("/", (_, res) => res.send("API is running"));
 
