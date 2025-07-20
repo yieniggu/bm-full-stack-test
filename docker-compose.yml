@@ -1,33 +1,40 @@
-version: "3.9"
-
 services:
-  db:
+  postgres_db:
     image: postgres:15
-    container_name: buildmas_db
+    container_name: postgres_db
     restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: prisma
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: buildmas
-    volumes:
-      - db_data:/var/lib/postgresql/data
+    networks:
+      - prisma-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: buildmas_backend
     depends_on:
-      - db
+      postgres_db:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env.prod
     ports:
       - "4000:4000"
     volumes:
       - ./backend:/app
-      - /app/node_modules
-    environment:
-      - PORT=4000
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/buildmas
-    command: npm run dev
+    networks:
+      - prisma-network
+    command: ["sh", "./entrypoint.sh"]
 
-volumes:
-  db_data:
+networks:
+  prisma-network:
+    name: prisma-network

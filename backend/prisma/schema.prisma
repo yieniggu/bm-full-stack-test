@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id      String   @id @default(uuid())
+  name    String
+  email   String   @unique
+  clients Client[]
+}
+
+model Client {
+  id      String   @id @default(uuid())
+  name    String
+  email   String
+  phone   String
+  userId  String
+  user    User     @relation(fields: [userId], references: [id])
+  estimates Estimate[]
+}
+
+model Estimate {
+  id             String   @id @default(uuid())
+  title          String
+  description    String
+  laborCost      Float
+  materialsTotal Float
+  totalCost      Float
+  status         Status
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum Status {
+  initiated
+  in_progress
+  completed
+}
