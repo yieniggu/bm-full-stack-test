@@ -1,7 +1,14 @@
 import { Request, Response } from "express";
 import * as estimateService from "../services/estimateService";
 
-export const getAllEstimates = async (_: Request, res: Response) => {
+export const getAllEstimates = async (req: Request, res: Response) => {
+  const { clientId } = req.query;
+
+  if (typeof clientId === "string") {
+    const estimates = await estimateService.getByClientId(clientId);
+    return res.json(estimates);
+  }
+
   const estimates = await estimateService.getAll();
   res.json(estimates);
 };

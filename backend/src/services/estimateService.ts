@@ -7,6 +7,10 @@ export const getAll = async (): Promise<Estimate[]> =>
 export const getById = async (id: string): Promise<Estimate | null> =>
   prisma.estimate.findUnique({ where: { id } });
 
+export const getByClientId = async (clientId: string): Promise<Estimate[]> => {
+  return prisma.estimate.findMany({ where: { clientId } });
+};
+
 export const create = async (
   data: Omit<Estimate, "id" | "createdAt" | "updatedAt" | "status">
 ) =>
