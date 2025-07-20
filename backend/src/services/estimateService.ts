@@ -13,13 +13,23 @@ export const getAll = async () =>
 export const getById = async (id: string): Promise<Estimate | null> =>
   prisma.estimate.findUnique({ where: { id } });
 
-export const getByClientId = async (clientId: string): Promise<Estimate[]> => {
-  return prisma.estimate.findMany({ where: { clientId } });
-};
+export const getByClientId = async (clientId: string): Promise<Estimate[]> =>
+  prisma.estimate.findMany({ where: { clientId } });
 
 export const create = async (
-  data: Omit<Estimate, "id" | "createdAt" | "updatedAt" | "status">
+  data: Omit<
+    Estimate,
+    "id" | "createdAt" | "updatedAt" | "status" | "totalCost"
+  >
 ) => {
+  const client = await prisma.client.findUnique({
+    where: { id: data.clientId },
+  });
+
+  if (!client) {
+    return null;
+  }
+
   const status =
     data.materialsTotal > 0 && data.laborCost > 0 ? "in_progress" : "initiated";
 
@@ -32,11 +42,13 @@ export const create = async (
   });
 };
 
-export const update = async (id: string, data: Partial<Estimate>) => {
+export const update = async (
+  id: string,
+  data: Partial<Estimate>
+): Promise<Estimate | null> => {
   const estimate = await prisma.estimate.findUnique({ where: { id } });
   if (!estimate) return null;
 
-  // start with previous values unless updated
   const laborCost = data.laborCost ?? estimate.laborCost;
   const materialsTotal = data.materialsTotal ?? estimate.materialsTotal;
 
@@ -67,5 +79,9 @@ export const update = async (id: string, data: Partial<Estimate>) => {
   });
 };
 
-export const remove = async (id: string) =>
-  prisma.estimate.delete({ where: { id } });
+export const remove = async (id: string) => {
+  const existing = await prisma.estimate.findUnique({ where: { id } });
+  if (!existing) return null;
+
+  return prisma.estimate.delete({ where: { id } });
+};
