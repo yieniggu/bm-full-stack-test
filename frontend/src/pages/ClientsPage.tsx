@@ -10,9 +10,13 @@ const ClientsPage = () => {
   const [client, setClient] = useState<Client | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleClientForm = (client?: Client) => {
+  const handleClientForm = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    client?: Client
+  ) => {
+    e.stopPropagation();
     setClient(client as Client);
-    return setIsModalOpen(true);
+    setIsModalOpen(true);
   };
 
   if (isLoading) return <div className="p-4">Loading clients...</div>;
@@ -46,13 +50,16 @@ const ClientsPage = () => {
 
             <div className="flex gap-4 justify-end">
               <button
-                onClick={() => handleClientForm(client)}
+                onClick={(e) => handleClientForm(e, client)}
                 className="text-blue-500 hover:underline"
               >
                 Edit
               </button>
               <button
-                onClick={() => deleteClient.mutate(client.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteClient.mutate(client.id);
+                }}
                 className="text-red-500 hover:underline"
               >
                 Delete

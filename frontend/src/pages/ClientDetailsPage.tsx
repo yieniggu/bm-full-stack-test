@@ -2,13 +2,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useClients, useDeleteClient } from "../hooks/useClients";
 import { useState } from "react";
 import ClientFormModal from "../components/clientFormModal";
+import { useEstimatesByClient } from "../hooks/useEstimates";
+import EstimateCard from "../components/EstimateCard";
+import EstimateFormModal from "../components/EstimateFormModal";
+import type { Estimate } from "../hooks/useEstimates";
 
 const ClientDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: clients, isLoading } = useClients();
+  const { data: estimates } = useEstimatesByClient(id!);
   const deleteClient = useDeleteClient();
-  const [isEditing, setIsEditing] = useState(false);
+
+  const [isEditingClient, setIsEditingClient] = useState(false);
+  const [isCreatingEstimate, setIsCreatingEstimate] = useState(false);
 
   const client = clients?.find((c) => c.id === id);
 
@@ -37,7 +44,7 @@ const ClientDetailsPage = () => {
         </p>
         <div className="flex gap-4 mt-4">
           <button
-            onClick={() => setIsEditing(true)}
+            onClick={() => setIsEditingClient(true)}
             className="text-blue-600 hover:underline"
           >
             Edit
@@ -51,13 +58,43 @@ const ClientDetailsPage = () => {
         </div>
       </div>
 
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold">Estimates</h2>
-        <p className="text-gray-500">No estimates yet.</p>
+      <div className="mt-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Estimates</h2>
+          <button
+            onClick={() => setIsCreatingEstimate(true)}
+            className="bg-blue-600 text-white px-3 py-1 rounded"
+          >
+            + Add Estimate
+          </button>
+        </div>
+
+        {estimates?.length ? (
+          estimates.map((estimate) => (
+            <EstimateCard
+              key={estimate.id}
+              estimate={estimate}
+              clientId={client.id}
+              clientName={client.name}
+            />
+          ))
+        ) : (
+          <p className="text-gray-500">No estimates yet.</p>
+        )}
       </div>
 
-      {isEditing && (
-        <ClientFormModal client={client} onClose={() => setIsEditing(false)} />
+      {isEditingClient && (
+        <ClientFormModal
+          client={client}
+          onClose={() => setIsEditingClient(false)}
+        />
+      )}
+
+      {isCreatingEstimate && (
+        <EstimateFormModal
+          clientId={client.id}
+          onClose={() => setIsCreatingEstimate(false)}
+        />
       )}
     </div>
   );
