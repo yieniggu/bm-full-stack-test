@@ -1,8 +1,14 @@
 import { Estimate } from "../generated/prisma";
 import { prisma } from "../prisma/client";
 
-export const getAll = async (): Promise<Estimate[]> =>
-  prisma.estimate.findMany();
+export const getAll = async () =>
+  prisma.estimate.findMany({
+    include: {
+      client: {
+        select: { name: true },
+      },
+    },
+  });
 
 export const getById = async (id: string): Promise<Estimate | null> =>
   prisma.estimate.findUnique({ where: { id } });
@@ -14,7 +20,8 @@ export const getByClientId = async (clientId: string): Promise<Estimate[]> => {
 export const create = async (
   data: Omit<Estimate, "id" | "createdAt" | "updatedAt" | "status">
 ) => {
-  const status = data.materialsTotal > 0 ? "in_progress" : "initiated";
+  const status =
+    data.materialsTotal > 0 && data.laborCost > 0 ? "in_progress" : "initiated";
 
   return prisma.estimate.create({
     data: {
@@ -35,11 +42,14 @@ export const update = async (id: string, data: Partial<Estimate>) => {
 
   let newStatus = estimate.status;
 
-  if (estimate.status === "initiated" && materialsTotal > 0) {
+  if (estimate.status === "initiated" && materialsTotal > 0 && laborCost > 0) {
     newStatus = "in_progress";
   }
 
-  if (estimate.status === "in_progress" && materialsTotal === 0) {
+  if (
+    estimate.status === "in_progress" &&
+    (materialsTotal === 0 || laborCost === 0)
+  ) {
     newStatus = "initiated";
   }
 
