@@ -13,27 +13,34 @@ export const getByClientId = async (clientId: string): Promise<Estimate[]> => {
 
 export const create = async (
   data: Omit<Estimate, "id" | "createdAt" | "updatedAt" | "status">
-) =>
-  prisma.estimate.create({
+) => {
+  const status = data.materialsTotal > 0 ? "in_progress" : "initiated";
+
+  return prisma.estimate.create({
     data: {
       ...data,
-      status: "initiated",
+      status,
       totalCost: data.laborCost + data.materialsTotal,
     },
   });
+};
 
 export const update = async (id: string, data: Partial<Estimate>) => {
   const estimate = await prisma.estimate.findUnique({ where: { id } });
   if (!estimate) return null;
 
+  // start with previous values unless updated
+  const laborCost = data.laborCost ?? estimate.laborCost;
+  const materialsTotal = data.materialsTotal ?? estimate.materialsTotal;
+
   let newStatus = estimate.status;
 
-  if (
-    estimate.status === "initiated" &&
-    data.laborCost !== undefined &&
-    data.materialsTotal !== undefined
-  ) {
+  if (estimate.status === "initiated" && materialsTotal > 0) {
     newStatus = "in_progress";
+  }
+
+  if (estimate.status === "in_progress" && materialsTotal === 0) {
+    newStatus = "initiated";
   }
 
   if (data.status === "completed" && estimate.status === "in_progress") {
@@ -45,10 +52,7 @@ export const update = async (id: string, data: Partial<Estimate>) => {
     data: {
       ...data,
       status: newStatus,
-      totalCost:
-        data.laborCost !== undefined && data.materialsTotal !== undefined
-          ? data.laborCost + data.materialsTotal
-          : estimate.totalCost,
+      totalCost: laborCost + materialsTotal,
     },
   });
 };
