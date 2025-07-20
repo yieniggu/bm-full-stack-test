@@ -10,9 +10,19 @@ export const getById = async (id: string): Promise<Client | null> => {
 };
 
 export const create = async (data: Omit<Client, "id">): Promise<Client> => {
-  return prisma.client.create({ data });
-};
+  const { name, email, phone, userId } = data;
 
+  return prisma.client.create({
+    data: {
+      name,
+      email,
+      phone,
+      user: {
+        connect: { id: userId },
+      },
+    },
+  });
+};
 export const update = async (
   id: string,
   data: Partial<Omit<Client, "id">>
