@@ -5,6 +5,8 @@ import {
   type Estimate,
 } from "../hooks/useEstimates";
 import MaterialRow from "./MaterialRow";
+import type { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 type Material = {
   name: string;
@@ -97,13 +99,31 @@ const EstimateFormModal = ({
       clientId,
     };
 
+    const handleError = (err: unknown) => {
+      const error = err as AxiosError<any>;
+      const res = error.response?.data;
+
+      const message =
+        res?.error ||
+        Object.values(res?.errors || {})[0]?.[0] ||
+        "Something went wrong";
+
+      toast.error(message);
+    };
+
     if (isEdit && initialEstimate) {
       updateEstimate.mutate(
         { ...data, id: initialEstimate.id },
-        { onSuccess: onClose }
+        {
+          onSuccess: onClose,
+          onError: handleError,
+        }
       );
     } else {
-      createEstimate.mutate(data, { onSuccess: onClose });
+      createEstimate.mutate(data, {
+        onSuccess: onClose,
+        onError: handleError,
+      });
     }
   };
 

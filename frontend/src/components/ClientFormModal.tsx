@@ -5,6 +5,8 @@ import {
   type Client,
 } from "../hooks/useClients";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 interface ClientFormModalProps {
   onClose: () => void;
@@ -41,32 +43,39 @@ const ClientFormModal = ({ onClose, client }: ClientFormModalProps) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
 
+    const data = {
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      userId: client?.userId ?? user?.id,
+    };
+
+    const handleError = (err: unknown) => {
+      const error = err as AxiosError<any>;
+      const res = error.response?.data;
+
+      const message =
+        res?.error ||
+        Object.values(res?.errors || {})[0]?.[0] ||
+        "Something went wrong";
+
+      toast.error(message);
+    };
+
     if (isEditMode && client?.id) {
       updateClient.mutate(
-        {
-          id: client.id,
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          userId: client.userId,
-        },
+        { ...data, id: client.id },
         {
           onSuccess: onClose,
+          onError: handleError,
         }
       );
     } else {
       if (!user?.id) return;
-      createClient.mutate(
-        {
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          userId: user.id,
-        },
-        {
-          onSuccess: onClose,
-        }
-      );
+      createClient.mutate(data, {
+        onSuccess: onClose,
+        onError: handleError,
+      });
     }
   };
 
