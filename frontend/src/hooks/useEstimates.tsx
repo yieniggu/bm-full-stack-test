@@ -56,6 +56,7 @@ export const useUpdateEstimate = () => {
       queryClient.invalidateQueries({
         queryKey: ["estimates", variables.clientId],
       });
+      queryClient.invalidateQueries({ queryKey: ["estimates"] });
     },
   });
 };

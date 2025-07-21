@@ -6,6 +6,8 @@ export const estimateSchema = z.object({
   laborCost: z.number().nonnegative("Labor cost must be >= 0"),
   materialsTotal: z.number().nonnegative("Materials total must be >= 0"),
   clientId: z.string().uuid("Invalid client ID"),
+
+  status: z.enum(["initiated", "in_progress", "completed"]).optional(),
 });
 
 export const updateEstimateSchema = estimateSchema.partial();
